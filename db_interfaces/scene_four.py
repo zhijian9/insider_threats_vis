@@ -6,7 +6,7 @@ def query_admin():
     return df
 
 def query_urlinfo_by_ip(ip):
-    df = pd.read_sql_query(f"select * from ip_url_net where ip = {ip}", db.engine)
+    df = pd.read_sql_query(f"select * from ip_url_net where ip = '{ip}'", db.engine)
     return df
 
 def query_url_marking():

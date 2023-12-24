@@ -46,9 +46,9 @@ def ip2url():
 @bp.route('/url_marking',methods=["GET","POST"])
 def url_marking():
     request_data = request.get_json()
-    url = request_data.get['url']
-    domain = request_data.get['domain']
-    marking = request_data.get['marking']
+    url = request_data.get('url')
+    domain = request_data.get('domain')
+    marking = request_data.get('marking')
     print(url,domain,marking)
     url_mark = Url_marking(url,domain,marking)
     db.session.merge(url_mark)
