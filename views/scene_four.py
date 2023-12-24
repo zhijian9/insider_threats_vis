@@ -22,7 +22,10 @@ def admin2modify():
     identity = request_data.get('identity')
     print(ip,identity)
     user = User_marking.query.get(ip)
-    user.identity = identity
+    if identity=='普通用户':
+        db.session.delete(user)
+    else:
+        user.identity = identity
     db.session.commit()
 
     return 'success'
