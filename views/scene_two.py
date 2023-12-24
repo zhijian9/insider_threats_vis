@@ -166,8 +166,10 @@ def sankey2table():
     ip_access_data = result.groupby('ip')['url'].count().reset_index(name='access_count')
     print(ip_access_data)
     result=result.merge(ip_access_data,on='ip')
-    print(result.info())
+
     result['access_other'] = result.apply(lambda row:'是' if row['ip_count']<row['access_count'] else "否", axis=1)
+    result['url_percentage'] = result['url_percentage'].apply(lambda x:round(x,4))
+    print(result.info())
     result.drop(['ip_count','access_count'], axis=1,inplace=True)
     return result.to_dict('records')
 
@@ -179,8 +181,8 @@ def user_marking():
         return jsonify({'error': '无效的数据格式！'})
     for data in datas:
         print(data)
-        user_marking = User_marking(data['ip'],data['user'],data['domain'],identity=data['identity'])
-        db.session.merge(user_marking)
+        user_mark = User_marking(data['ip'],data['user'],data['domain'],identity=data['identity'])
+        db.session.merge(user_mark)
         db.session.commit()
 
     return 'success'
