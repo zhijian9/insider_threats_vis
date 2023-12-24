@@ -18,7 +18,8 @@ def admin2modify():
     request_data = request.args.to_dict()
     ip = request_data.get('ip')
     identity = request_data.get('identity')
-    user = User_marking.query.get(id)
+    print(ip,identity)
+    user = User_marking.query.get(ip)
     user.identity = identity
     db.session.commit()
 

@@ -50,7 +50,7 @@ def data4table():
     url_list = []
     for label, df_group in df_group_domain:
         count_list.append(df_group.shape[0])
-        url_list.append("http://" + label)
+        url_list.append(label)
     ses = pd.Series(count_list)
     ses.sort_values(inplace=True, ascending=False)
     index_list = ses.index.to_list()
