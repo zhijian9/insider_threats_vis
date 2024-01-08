@@ -44,5 +44,5 @@ def query_ip_and_url(ip,url):
     return df
 
 def query_if_marking(ip):
-    df = pd.read_sql_query(f"select * from user_marking where ip = '{ip}'", db.engine)
+    df = pd.read_sql_query(f"select ip,identity from user_marking where ip = '{ip}'", db.engine)
     return df

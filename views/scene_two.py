@@ -160,8 +160,10 @@ def sankey2table():
         if_marking = query_if_marking(ip)
         if if_marking.empty:
             data['marked_or_not'] = '否'
+            data['identity'] = None
         else:
             data['marked_or_not'] = '是'
+            data['identity'] = if_marking['identity']
         result = pd.concat([result,data])
     ip_access_data = result.groupby('ip')['url'].count().reset_index(name='access_count')
     print(ip_access_data)
@@ -187,7 +189,7 @@ def user_marking():
 
     return 'success'
 
-@bp.route('/net')
+@bp.route('/net', methods=["GET","POST"])
 def ip_url_net():
     label = request.args.get("label")
     data = query_net()
@@ -196,8 +198,12 @@ def ip_url_net():
     data = data[data['ip'].isin(df_ip['ip'])].reset_index(drop=True)
     print(df_ip)
     print(data.info())
+    data = data.groupby('ip').apply(lambda x: x.nlargest(10, 'url_count'))
     ip_node_df = data.loc[:, ['ip', 'ip_count']].rename(columns={'ip': 'name', 'ip_count': 'value'}).drop_duplicates()
     url_node_df = data.loc[:, ['url', 'url_count']].rename(columns={'url': 'name', 'url_count': 'value'}).drop_duplicates()
+    value_sum = url_node_df['value'].sum()
+    print(value_sum)
+    url_node_df['value'] = url_node_df['value'].apply(lambda x:round(x/value_sum, 4))
     node_df = pd.concat([ip_node_df, url_node_df], ignore_index=True)
     node = node_df.to_dict('records')
     link = data.loc[:, ['ip', 'url', 'count']].rename(columns={'ip': 'source', 'url': 'target', 'count': 'value'}).to_dict('records')
