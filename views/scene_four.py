@@ -36,6 +36,7 @@ def ip2url():
     ip = request_data.get('ip')
     domain = request_data.get('domain')
     data = query_urlinfo_by_ip(ip)
+    data['url_percentage'] = data['url_percentage'].apply(lambda x:round(x,4))
     url_marking = query_url_marking()
     data = data.merge(url_marking, on='url', how='left')
     data['domain'] = domain

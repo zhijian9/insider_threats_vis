@@ -209,7 +209,7 @@ def ip_url_net():
     label = request.args.get("label")
     data = query_net()
     df_ip = query_ip_by_label(label)
-    df_ip = df_ip.loc[:10]
+    # df_ip = df_ip.loc[:10]
     data = data[data['ip'].isin(df_ip['ip'])].reset_index(drop=True)
     print(df_ip)
     print(data.info())
@@ -217,7 +217,7 @@ def ip_url_net():
     ip_node_df = data.loc[:, ['ip', 'ip_count']].rename(columns={'ip': 'name', 'ip_count': 'value'}).drop_duplicates()
     url_node_df = data.loc[:, ['url', 'url_count']].rename(columns={'url': 'name', 'url_count': 'value'}).drop_duplicates()
 
-    # ip_value_sum = ip_node_df['value'].sum()
+    ip_value_sum = ip_node_df['value'].sum()
     # print(ip_value_sum)
     ip_node_df['value'] = ip_node_df['value'].apply(lambda x: round(x / 50, 4))
 
