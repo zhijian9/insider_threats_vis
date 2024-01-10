@@ -97,44 +97,59 @@ def data4sankey():
         url = row["url"]
         user = row["ip"]
         paths = url.split("/")
-        nodes[paths[2]] = "web"
         nodes[user] = "person"
-        if len(paths) == 3:
-            if links.get(paths[2] + ":" + user) is None:
-                links[paths[2] + ":" + user] = 1
-            else:
-                links[paths[2] + ":" + user] += 1
-        else:
-            if nodes.get(paths[3]) is None:
-                nodes[paths[3]] = "web"
-                links[paths[2] + ":" + paths[3]] = 1
-            else:
-                links[paths[2] + ":" + paths[3]] += 1
-        if len(paths) == 4:
-            if links.get(paths[3] + ":" + user) is None:
-                links[paths[3] + ":" + user] = 1
-            else:
-                links[paths[3] + ":" + user] += 1
-        else:
-            if nodes.get(paths[4]) is None:
-                nodes[paths[4]] = "web"
-                links[paths[3] + ":" + paths[4]] = 1
-            else:
-                links[paths[3] + ":" + paths[4]] += 1
+        if len(paths) <= 3:
+            print("非法url")
         if len(paths) > 5:
-            if nodes.get(paths[5]) is None:
-                # nodes[paths[5]] = "web"
-                # links[paths[4]+":"+paths[5]] = 1
-                if links.get(paths[4] + ":" + user) is None:
-                    links[paths[4] + ":" + user] = 1
-                else:
-                    links[paths[4] + ":" + user] += 1
+            paths = paths[2:5]
+        for i in range(len(paths)-1):
+            nodes[paths[i]] = "web"
+            if links.get(paths[i] + ":" + paths[i+1]) is None:
+                links[paths[i] + ":" + paths[i+1]] = 1
             else:
-                # links[paths[4]+":"+paths[5]] += 1
-                if links.get(paths[4] + ":" + user) is None:
-                    links[paths[4] + ":" + user] = 1
-                else:
-                    links[paths[4] + ":" + user] += 1
+                links[paths[i] + ":" + paths[i+1]] += 1
+        nodes[paths[-1]] = "web"
+        if links.get(paths[-1] + ":" + user) is None:
+            links[paths[-1] + ":" + user] = 1
+        else:
+            links[paths[-1] + ":" + user] += 1
+        # if len(paths) == 3:
+        #     if links.get(paths[2] + ":" + user) is None:
+        #         links[paths[2] + ":" + user] = 1
+        #     else:
+        #         links[paths[2] + ":" + user] += 1
+        # else:
+        #     if nodes.get(paths[3]) is None:
+        #         nodes[paths[3]] = "web"
+        #         links[paths[2] + ":" + paths[3]] = 1
+        #     else:
+        #         links[paths[2] + ":" + paths[3]] += 1
+        # if len(paths) == 4:
+        #     if links.get(paths[3] + ":" + user) is None:
+        #         links[paths[3] + ":" + user] = 1
+        #     else:
+        #         links[paths[3] + ":" + user] += 1
+        # else:
+        #     if nodes.get(paths[4]) is None:
+        #         nodes[paths[4]] = "web"
+        #         links[paths[3] + ":" + paths[4]] = 1
+        #     else:
+        #         links[paths[3] + ":" + paths[4]] += 1
+        # if len(paths) >= 5:
+        #     if nodes.get(paths[5]) is None:
+        #         # nodes[paths[5]] = "web"
+        #         # links[paths[4]+":"+paths[5]] = 1
+        #         if links.get(paths[4] + ":" + user) is None:
+        #             links[paths[4] + ":" + user] = 1
+        #         else:
+        #             links[paths[4] + ":" + user] += 1
+        #     else:
+        #         # links[paths[4]+":"+paths[5]] += 1
+        #         if links.get(paths[4] + ":" + user) is None:
+        #             links[paths[4] + ":" + user] = 1
+        #         else:
+        #             links[paths[4] + ":" + user] += 1
+    print(nodes,links)
     for key, value in nodes.items():
         result.get("nodes").append({"name": key, "status": value})
     for key, value in links.items():
@@ -144,7 +159,7 @@ def data4sankey():
     return return_json
 
 
-@bp.route('/sankey2table',methods=["GET"])
+@bp.route('/sankey2table',methods=["GET","POST"])
 def sankey2table():
     request_data = request.get_json()
     if request_data is None or not isinstance(request_data, list):
@@ -201,14 +216,23 @@ def ip_url_net():
     data = data.groupby('ip').apply(lambda x: x.nlargest(10, 'url_count'))
     ip_node_df = data.loc[:, ['ip', 'ip_count']].rename(columns={'ip': 'name', 'ip_count': 'value'}).drop_duplicates()
     url_node_df = data.loc[:, ['url', 'url_count']].rename(columns={'url': 'name', 'url_count': 'value'}).drop_duplicates()
-    value_sum = url_node_df['value'].sum()
-    print(value_sum)
-    url_node_df['value'] = url_node_df['value'].apply(lambda x:round(x/value_sum, 4))
+
+    # ip_value_sum = ip_node_df['value'].sum()
+    # print(ip_value_sum)
+    ip_node_df['value'] = ip_node_df['value'].apply(lambda x: round(x / 50, 4))
+
+    # url_value_sum = url_node_df['value'].sum()
+    # print(url_value_sum)
+    url_node_df['value'] = url_node_df['value'].apply(lambda x:round(x/ 50, 4))
+
     node_df = pd.concat([ip_node_df, url_node_df], ignore_index=True)
     node = node_df.to_dict('records')
-    link = data.loc[:, ['ip', 'url', 'count']].rename(columns={'ip': 'source', 'url': 'target', 'count': 'value'}).to_dict('records')
+    link = data.loc[:, ['ip', 'url', 'count']].rename(columns={'ip': 'source', 'url': 'target', 'count': 'value'})
+    value_sum = link['value'].sum()
+    print(value_sum)
+    link['value'] = link['value'].apply(lambda x: round(x / value_sum, 4))
     result = {'node':node,
-              'link':link}
+              'link':link.to_dict('records')}
     return result
 
 
