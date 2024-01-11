@@ -8,8 +8,7 @@ bp = Blueprint("scene_five", __name__, url_prefix='/scene_five')
 
 @bp.route('data2table', methods=['POST','GET'])
 def data2table():
-    data = query_adjacency_matrix()
-
+    data = query_matrix()
     data = data.groupby(['source','target'])['change'].count().reset_index(name='count')
     return data.to_dict('records')
 
