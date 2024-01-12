@@ -9,7 +9,9 @@ bp = Blueprint("scene_five", __name__, url_prefix='/scene_five')
 @bp.route('data2table', methods=['POST','GET'])
 def data2table():
     data = query_matrix()
-    data = data.groupby(['source','target'])['change'].count().reset_index(name='count')
+    data = data.drop_duplicates()
+    count_data = data.groupby('target')['source'].count().reset_index(name='count')
+    data = data.merge(count_data,on='target',how='left')
     return data.to_dict('records')
 
 @bp.route('data2force', methods=['POST','GET'])
