@@ -18,11 +18,11 @@ def create_app():
     from views.scene_two import bp as scene_two_bp
     from views.scene_three import bp as scene_three_bp
     from views.scene_four import bp as scene_four_bp
-    from views.scene_five import bp as scene_five_bp
+
     app.register_blueprint(scene_one_bp)
     app.register_blueprint(scene_two_bp)
     app.register_blueprint(scene_three_bp)
     app.register_blueprint(scene_four_bp)
-    app.register_blueprint(scene_five_bp)
+
 
     return app

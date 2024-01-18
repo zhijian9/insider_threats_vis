@@ -170,8 +170,6 @@ def sankey2table():
         url = data.get('url')
         print(ip,type(ip),url,type(url))
         data = query_ip_and_url(ip,url)
-        user = query_user_by_ip(ip)
-        data = data.merge(user,on='ip')
         if_marking = query_if_marking(ip)
         if if_marking.empty:
             data['marked_or_not'] = '否'
@@ -204,70 +202,4 @@ def user_marking():
 
     return 'success'
 
-@bp.route('/net', methods=["GET","POST"])
-def ip_url_net():
-    label = request.args.get("label")
-    data = query_net()
-    df_ip = query_ip_by_label(label)
-    # df_ip = df_ip.loc[:10]
-    data = data[data['ip'].isin(df_ip['ip'])].reset_index(drop=True)
-    print(df_ip)
-    print(data.info())
-    data = data.groupby('ip').apply(lambda x: x.nlargest(10, 'url_count'))
-    ip_node_df = data.loc[:, ['ip', 'ip_count']].rename(columns={'ip': 'name', 'ip_count': 'value'}).drop_duplicates()
-    url_node_df = data.loc[:, ['url', 'url_count']].rename(columns={'url': 'name', 'url_count': 'value'}).drop_duplicates()
 
-    ip_value_sum = ip_node_df['value'].sum()
-    # print(ip_value_sum)
-    ip_node_df['value'] = ip_node_df['value'].apply(lambda x: round(x / 50, 4))
-
-    # url_value_sum = url_node_df['value'].sum()
-    # print(url_value_sum)
-    url_node_df['value'] = url_node_df['value'].apply(lambda x:round(x/ 50, 4))
-
-    node_df = pd.concat([ip_node_df, url_node_df], ignore_index=True)
-    node = node_df.to_dict('records')
-    link = data.loc[:, ['ip', 'url', 'count']].rename(columns={'ip': 'source', 'url': 'target', 'count': 'value'})
-    value_sum = link['value'].sum()
-    print(value_sum)
-    link['value'] = link['value'].apply(lambda x: round(x / value_sum, 4))
-    result = {'node':node,
-              'link':link.to_dict('records')}
-    return result
-
-
-@bp.route('/net2table')
-def net2table():
-    ip = request.args.get("ip")
-    data = query_info_by_ip(ip)
-    return data.to_dict("records")
-
-@bp.route('/url_marking_user', methods=["GET","POST"])
-def url_marking_user():
-    urls = request.get_json()
-    if urls is None or not isinstance(urls, list):
-        return jsonify({'error': '无效的数据格式！'})
-    for item in urls:
-        url = item.get("url")
-        print(url)
-        df_ip = query_ip_by_url(url)
-        data = query_ip_and_user()
-        data = data[data['ip'].isin(df_ip['ip'])].reset_index(drop=True)
-        for index,row in data.iterrows():
-            user_marking = User_marking(row['ip'],row['user'],row['domain'],identity='安全员')
-            db.session.merge(user_marking)
-            db.session.commit()
-
-    return 'success'
-
-
-@bp.route("/url_marking", methods=["GET","POST"])
-def url_marking():
-    url_data = request.args.to_dict()
-    print(url_data)
-    url_marking = Url_marking(url_data['url'],url_data['domain'],url_data['marking'])
-    db.session.merge(url_marking)
-    db.session.commit()
-    # result = update_url_marking(url_data)
-    print(url_marking)
-    return 'success'

@@ -1,14 +1,10 @@
 from others import db
 import pandas as pd
 
-def query_admin():
-    df = pd.read_sql_query("select ip,user,identity,domain from user_marking",db.engine)
+def query_matrix():
+    df = pd.read_sql_query("SELECT source,target FROM matrix_changes_240110 WHERE `change`=1", db.engine)
     return df
 
-def query_urlinfo_by_ip(ip):
-    df = pd.read_sql_query(f"select * from ip_url_net where ip = '{ip}'", db.engine)
-    return df
-
-def query_url_marking():
-    df = pd.read_sql_query(f"select url,marking,domain from url_marking", db.engine)
+def query_by_target(target):
+    df = pd.read_sql_query(f"SELECT source,target,`change` FROM matrix_changes_240110 WHERE target = '{target}' and `change`=1", db.engine)
     return df

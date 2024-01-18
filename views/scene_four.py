@@ -4,55 +4,31 @@ import re
 import json
 import time
 
-from models.Url_marking import Url_marking
-from models.User_marking import User_marking
+
 
 
 bp = Blueprint("scene_four", __name__, url_prefix='/scene_four')
 
-@bp.route('/admin2list',methods=["GET"])
-def admin2list():
-    data = query_admin()
+@bp.route('data2table', methods=['POST','GET'])
+def data2table():
+    data = query_matrix()
+    data = data.drop_duplicates()
+    count_data = data.groupby('target')['source'].count().reset_index(name='count')
+    data = data.merge(count_data,on='target',how='left')
     return data.to_dict('records')
 
-@bp.route('/admin2modify',methods=["GET","POST"])
-def admin2modify():
-    request_data = request.get_json()
-    ip = request_data.get('ip')
-    identity = request_data.get('identity')
-    print(ip,identity)
-    user = User_marking.query.get(ip)
-    if identity=='普通用户':
-        db.session.delete(user)
-    else:
-        user.identity = identity
-    db.session.commit()
+@bp.route('data2force', methods=['POST','GET'])
+def data2force():
+    target = request.args.get('target')
+    print(target)
+    data = query_by_target(target)
 
-    return 'success'
+    source_node =  data['source'].unique()
+    nodes = []
+    nodes.append({'id':target,'group':'parent'})
+    for node in source_node:
+        nodes.append({'id':node,'group':'child'})
 
-@bp.route('/ip2url', methods=["GET"])
-def ip2url():
-    request_data = request.args.to_dict()
-    ip = request_data.get('ip')
-    domain = request_data.get('domain')
-    data = query_urlinfo_by_ip(ip)
-    data['url_percentage'] = data['url_percentage'].apply(lambda x:round(x,4))
-    url_marking = query_url_marking()
-    data = data.merge(url_marking, on='url', how='left')
-    data['domain'] = domain
-    data.fillna('无', inplace=True)
+    links = data.groupby(['source','target'])['change'].count().reset_index(name='value').to_dict('records')
 
-    return data.to_dict('records')
-
-@bp.route('/url_marking',methods=["GET","POST"])
-def url_marking():
-    request_data = request.get_json()
-    url = request_data.get('url')
-    domain = request_data.get('domain')
-    marking = request_data.get('marking')
-    print(url,domain,marking)
-    url_mark = Url_marking(url,domain,marking)
-    db.session.merge(url_mark)
-    db.session.commit()
-
-    return 'success'
+    return jsonify({'nodes':nodes,'links':links})
