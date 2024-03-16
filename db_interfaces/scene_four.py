@@ -2,9 +2,9 @@ from others import db
 import pandas as pd
 
 def query_matrix():
-    df = pd.read_sql_query("SELECT source,target FROM matrix_changes_240110 WHERE `change`=1", db.engine)
+    df = pd.read_sql_query("SELECT source,target,target_count FROM matrix_changes WHERE `change`=1", db.engine)
     return df
 
-def query_by_target(target):
-    df = pd.read_sql_query(f"SELECT source,target,`change` FROM matrix_changes_240110 WHERE target = '{target}' and `change`=1", db.engine)
+def query_by_source(source):
+    df = pd.read_sql_query(f"SELECT source,target,target_count FROM matrix_changes WHERE source = '{source}'", db.engine)
     return df
